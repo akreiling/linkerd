@@ -10,7 +10,7 @@ class MetricTest extends FunSuite {
     var lastName = ""
     var lastValue = ""
 
-    def count(x$1: String, x$2: Long, x$3: String*): Unit = {
+    def count(x$1: String, x$2: Long, x$3: Double, x$4: String*): Unit = {
       lastName = x$1
       lastValue = x$2.toString
     }
@@ -24,7 +24,7 @@ class MetricTest extends FunSuite {
     }
 
     // we can't simply extend NoOpStatsDClient because it's final
-    def count(x$1: String, x$2: Long, x$3: Double, x$4: String*): Unit = ???
+    def count(x$1: String, x$2: Long, x$3: String*): Unit = ???
     def decrement(x$1: String, x$2: Double, x$3: String*): Unit = ???
     def decrement(x$1: String, x$2: String*): Unit = ???
     def decrementCounter(x$1: String, x$2: Double, x$3: String*): Unit = ???
@@ -62,31 +62,11 @@ class MetricTest extends FunSuite {
     val name = "foo"
     val value = 123
     val statsDClient = new MockStatsDClient
-    val counter = new Metric.Counter(statsDClient, name)
+    val counter = new Metric.Counter(statsDClient, name, 1.0d)
     counter.incr(value)
-    counter.send
 
     assert(statsDClient.lastName == name)
     assert(statsDClient.lastValue == value.toString)
-  }
-
-  test("Counter batches deltas on send") {
-    val name = "foo"
-    val value = 123
-    val statsDClient = new MockStatsDClient
-    val counter = new Metric.Counter(statsDClient, name)
-
-    counter.incr(value)
-    assert(statsDClient.lastName == "")
-    assert(statsDClient.lastValue == "")
-
-    counter.incr(value)
-    assert(statsDClient.lastName == "")
-    assert(statsDClient.lastValue == "")
-
-    counter.send
-    assert(statsDClient.lastName == name)
-    assert(statsDClient.lastValue == (value + value).toString)
   }
 
   test("Stat records a statsd execution time") {

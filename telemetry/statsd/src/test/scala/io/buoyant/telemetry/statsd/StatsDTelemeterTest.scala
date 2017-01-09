@@ -7,8 +7,8 @@ import org.scalatest._
 
 class StatsDTelemeterTest extends FunSuite {
 
-  class MockStatsDStatsReceiver(statsDClient: StatsDClient, histogramSampleRate: Double)
-    extends StatsDStatsReceiver(statsDClient: StatsDClient, histogramSampleRate: Double) {
+  class MockStatsDStatsReceiver(statsDClient: StatsDClient, sampleRate: Double)
+    extends StatsDStatsReceiver(statsDClient: StatsDClient, sampleRate: Double) {
 
     var flushes = 0
     var closed = false
@@ -47,13 +47,13 @@ class StatsDTelemeterTest extends FunSuite {
   }
 
   test("flushes gauges every period until close") {
-    val exportIntervalMs = 10000
+    val gaugeIntervalMs = 10000
     val stats = new MockStatsDStatsReceiver(new NoOpStatsDClient, 1.0d)
     val timer = new MockTimer
 
     val telemeter = new StatsDTelemeter(
       stats,
-      exportIntervalMs,
+      gaugeIntervalMs,
       timer
     )
 
@@ -62,17 +62,17 @@ class StatsDTelemeterTest extends FunSuite {
 
       assert(stats.flushes == 0)
 
-      time.advance(exportIntervalMs.millis)
+      time.advance(gaugeIntervalMs.millis)
       timer.tick()
       assert(stats.flushes == 1)
 
-      time.advance(exportIntervalMs.millis)
+      time.advance(gaugeIntervalMs.millis)
       timer.tick()
       assert(stats.flushes == 2)
 
       val _ = closable.close(0.millis)
 
-      time.advance(exportIntervalMs.millis)
+      time.advance(gaugeIntervalMs.millis)
       timer.tick()
       assert(stats.flushes == 2)
     }

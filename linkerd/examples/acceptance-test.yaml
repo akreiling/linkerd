@@ -12,11 +12,12 @@ tracers:
 telemetry:
 - kind: io.l5d.commonMetrics
 - kind: io.l5d.statsd
+  experimental: true
   prefix: linkerd
   hostname: 127.0.0.1
   port: 8125
-  exportIntervalMs: 10000
-  histogramSampleRate: 0.01
+  gaugeIntervalMs: 10000
+  sampleRate: 0.01
 - kind: io.l5d.tracelog
   sampleRate: 0.2
   level: TRACE

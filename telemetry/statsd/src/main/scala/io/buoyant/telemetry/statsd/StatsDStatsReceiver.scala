@@ -18,19 +18,17 @@ private[telemetry] object StatsDStatsReceiver {
 
 private[telemetry] class StatsDStatsReceiver(
   statsDClient: StatsDClient,
-  histogramSampleRate: Double
+  sampleRate: Double
 ) extends StatsReceiverWithCumulativeGauges {
   import StatsDStatsReceiver._
 
   val repr: AnyRef = this
 
   private[statsd] def flush(): Unit = {
-    counters.values.foreach(_.send)
     gauges.values.foreach(_.send)
   }
   private[statsd] def close(): Unit = statsDClient.stop()
 
-  private[this] val counters = new ConcurrentHashMap[String, Metric.Counter].asScala
   private[this] val gauges = new ConcurrentHashMap[String, Metric.Gauge].asScala
 
   protected[this] def registerGauge(name: Seq[String], f: => Float): Unit = {
@@ -42,13 +40,10 @@ private[telemetry] class StatsDStatsReceiver(
     val _ = gauges.remove(mkName(name))
   }
 
-  def counter(name: String*): Counter = {
-    val statsDName = mkName(name)
-    counters(statsDName) = new Metric.Counter(statsDClient, statsDName)
-    counters(statsDName)
-  }
+  def counter(name: String*): Counter =
+    new Metric.Counter(statsDClient, mkName(name), sampleRate)
 
   def stat(name: String*): Stat =
-    new Metric.Stat(statsDClient, mkName(name), histogramSampleRate)
+    new Metric.Stat(statsDClient, mkName(name), sampleRate)
 
 }
